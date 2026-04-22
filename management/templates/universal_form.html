@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { padding: 20px; background-color: #fff; font-family: 'Segoe UI', sans-serif; }
+        label { font-weight: 600; margin-bottom: 5px; color: #344767; }
+        .helptext { font-size: 0.8rem; color: #6c757d; display: block; margin-top: 2px; }
+        
+        /* Input Group Styling */
+        .input-group > .form-control, .input-group > .form-select { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .btn-add { border-top-left-radius: 0; border-bottom-left-radius: 0; border-color: #dee2e6; color: #28a745; }
+        .btn-add:hover { background-color: #28a745; color: white; border-color: #28a745; }
+        
+        /* Error Styling */
+        .alert-danger { font-size: 0.9rem; padding: 10px; }
+        .text-danger { font-size: 0.85rem; font-weight: 600; margin-top: 4px; display: block; }
+    </style>
+    
+    {{ form.media }}
+</head>
+<body>
+    <div class="container-fluid">
+        <h4 class="mb-4 text-primary fw-bold border-bottom pb-2">{{ title }}</h4>
+        
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">
+                        {{ field.label }} 
+                        {% if field.field.required %}<span class="text-danger d-inline">*</span>{% endif %}
+                    </label>
+                    
+                    {% if field.field.widget.attrs.data_add_url %}
+                        <div class="input-group">
+                            {{ field }}
+                            <button type="button" class="btn btn-outline-secondary btn-add" 
+                                    onclick="openChildPopup('{{ field.field.widget.attrs.data_add_url }}')" 
+                                    title="Add New {{ field.label }}">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <div class="text-danger"><i class="fas fa-times-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if field.help_text %}
+                        <small class="text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="fas fa-save me-2"></i> Save Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 1. Styling & Date Fixer
+        var inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(function(input) {
+            // Checkbox styling
+            if (input.type === 'checkbox') {
+                input.classList.add('form-check-input');
+            } else {
+                input.classList.add('form-control');
+            }
+
+            // DATE PICKER FIX
+            if (input.name.includes('date') && input.type === 'text') {
+                input.type = 'date';
+            }
+        });
+
+        // 2. Open Child Popup
+        function openChildPopup(url) {
+            var win = window.open(url, "_blank", "width=600,height=700,top=100,left=400,scrollbars=yes");
+        }
+
+        // 3. Live Update Logic
+        window.updateRelatedField = function(fieldId, newId, newName) {
+            var selectBox = document.getElementById(fieldId);
+            if (selectBox) {
+                var newOption = new Option(newName, newId, true, true);
+                selectBox.add(newOption, undefined);
+                selectBox.value = newId;
+                selectBox.dispatchEvent(new Event('change'));
+            }
+        };
+    </script>
+</body>
+</html>
